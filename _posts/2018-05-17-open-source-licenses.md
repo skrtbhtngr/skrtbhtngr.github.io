@@ -7,6 +7,8 @@ There are many open-source licenses out there which you can add to your project,
 Also, the term **Permissive license** means that there are very few requirements from how your Work might be redistributed by another User, and the term **Copyleft** is used to refer to a practice wherein the User is expected to preserve the same license term in his/her Derived Work. The extent to which the Copyleft is imposed by the license is referred to as the strength (**Strong** or **Weak**) of the Copyleft.
 
 [This](https://choosealicense.com) is a nice website that helps you choose a license.
+
+
 ___
 ### Apache License, Version 2.0 [[link](https://www.apache.org/licenses/LICENSE-2.0)]
 
