@@ -26,7 +26,8 @@ github_username:  skrtbhtngr
 markdown: kramdown
 #theme: jekyll-theme-slate
 theme: minima
-#plugins:
+plugins:
+  - jemoji
 #  - jekyll-feed
 
 # Exclude from processing.
