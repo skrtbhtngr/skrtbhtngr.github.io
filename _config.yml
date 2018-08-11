@@ -16,7 +16,7 @@
 title: Sukrit Bhatnagar
 email: skrbthtngr@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  This is my technical blog.
+ Blog about all things technical that I like.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://skrtbhtngr.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: skrtbhtngr
@@ -24,9 +24,10 @@ github_username:  skrtbhtngr
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-slate
-plugins:
-  - jekyll-feed
+#theme: jekyll-theme-slate
+theme: minima
+#plugins:
+#  - jekyll-feed
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list

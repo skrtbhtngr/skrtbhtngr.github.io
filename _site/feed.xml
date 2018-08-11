@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.1">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-11T22:21:33+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
+
+&lt;p&gt;In this post, I’ll try to explain the most frequently used licenses in very simple terms. These terms might NOT be 100% legally accurate as they are meant to just provide you with a gist of the various licenses. I will focus on the basic rules and leave out any complexities. For a brief comparison, visit &lt;a href=&quot;https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses#General_comparison&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;There are many open-source licenses out there which you can add to your project, and these vary mainly in the type of &lt;em&gt;freedom&lt;/em&gt; you (the &lt;strong&gt;Licensor&lt;/strong&gt;) are giving to the person who may &lt;em&gt;use&lt;/em&gt; your code (the &lt;strong&gt;User&lt;/strong&gt;). Did you see that? I just defined two terms used very often in legal notices and licenses. But, why stop at this? Let’s bring some more terms into play. Your project (for which you want a license) will be called as &lt;strong&gt;Work&lt;/strong&gt;, because, it is your work! Also, when a User uses your code and makes some changes, we will call that modified code as &lt;strong&gt;Derived Work&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also, the term &lt;strong&gt;Permissive license&lt;/strong&gt; means that there are very few requirements from how your Work might be redistributed by another User, and the term &lt;strong&gt;Copyleft&lt;/strong&gt; is used to refer to a practice wherein the User is expected to preserve the same license term in his/her Derived Work. The extent to which the Copyleft is imposed by the license is referred to as the strength (&lt;strong&gt;Strong&lt;/strong&gt; or &lt;strong&gt;Weak&lt;/strong&gt;) of the Copyleft.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://choosealicense.com&quot;&gt;This&lt;/a&gt; is a nice website that helps you choose a license.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;apache-license-version-20-link&quot;&gt;Apache License, Version 2.0 [&lt;a href=&quot;https://www.apache.org/licenses/LICENSE-2.0&quot;&gt;link&lt;/a&gt;]&lt;/h3&gt;
+
+&lt;p&gt;This is a &lt;em&gt;permissive&lt;/em&gt; (or &lt;em&gt;non-protective&lt;/em&gt;) license, also known as a &lt;em&gt;weak copyleft&lt;/em&gt; license. Basically, the Users can do &lt;em&gt;anything&lt;/em&gt; they want with your code, that is&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;use it in their project,&lt;/li&gt;
+  &lt;li&gt;sell it and maybe earn some money! ,&lt;/li&gt;
+  &lt;li&gt;modify it and sell it,&lt;/li&gt;
+  &lt;li&gt;modify it and release it (maybe with some other license),&lt;/li&gt;
+  &lt;li&gt;modify it and use it in a proprietary software!,&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;add&lt;/em&gt; their own copyright to the modifications they made,&lt;/li&gt;
+  &lt;li&gt;play with it,&lt;/li&gt;
+  &lt;li&gt;make wall posters of it,&lt;/li&gt;
+  &lt;li&gt;any combination of the above;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;literally, anything. But, here’s the catch: there are some things that they &lt;em&gt;have&lt;/em&gt; to do:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;they must include a copy of this license in their Derived Work.&lt;/li&gt;
+  &lt;li&gt;if they modify a file from your Work, they must explicitly state this in that file.&lt;/li&gt;
+  &lt;li&gt;they must include the copyright and trademark info in your Work; that is, give you some credits.&lt;/li&gt;
+  &lt;li&gt;cannot use your trademark or product name, except when mentioning the source of their Derived Work.&lt;/li&gt;
+  &lt;li&gt;cannot hold you liable if your code breaks.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Version 2.0 allows you to include the copy once in your project instead of including it in every file.&lt;/p&gt;
+
+&lt;p&gt;Some notable software and libraries using this license:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Android&lt;/li&gt;
+  &lt;li&gt;Docker&lt;/li&gt;
+  &lt;li&gt;IntelliJ IDEA and PyCharm&lt;/li&gt;
+  &lt;li&gt;.NET CCompiler Platform&lt;/li&gt;
+  &lt;li&gt;TensorFlow&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;mit-license-link&quot;&gt;MIT license [&lt;a href=&quot;https://opensource.org/licenses/MIT&quot;&gt;link&lt;/a&gt;]&lt;/h3&gt;
+
+&lt;p&gt;This is one of the most easy-to-understand licenses available, and its license statement is very concise. This also a &lt;em&gt;permissive&lt;/em&gt; (or &lt;em&gt;non-protective&lt;/em&gt;) license also known as a &lt;em&gt;weak copyleft&lt;/em&gt; license. The Users can pretty much do &lt;em&gt;anything&lt;/em&gt; with your code (just like in Apache license), and only a few things are expected of them:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;they must include a copy of this license in their Derived Work.&lt;/li&gt;
+  &lt;li&gt;they must include the copyright info in your Work; that is, give you some credits.&lt;/li&gt;
+  &lt;li&gt;cannot hold you liable if your code breaks.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some notable software and libraries using this license:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;AngularJS&lt;/li&gt;
+  &lt;li&gt;Bitcoin Core&lt;/li&gt;
+  &lt;li&gt;GitLab&lt;/li&gt;
+  &lt;li&gt;jQuery&lt;/li&gt;
+  &lt;li&gt;Ncurses&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h3 id=&quot;gnu-general-public-license-version-2-link&quot;&gt;GNU General Public License, version 2 [&lt;a href=&quot;https://www.gnu.org/licenses/gpl-2.0.html&quot;&gt;link&lt;/a&gt;]&lt;/h3&gt;
+
+&lt;p&gt;This a &lt;em&gt;protective&lt;/em&gt; or &lt;em&gt;strong copyleft&lt;/em&gt; license, which means that any Derived Work must be distributed under the same license. One of the key things to note here is that any User of your Work is bound to make his/her (relevant portion of) Derived Work open-source! Apart from that, Users can pretty much do anything with your code (as mentioned in the Apache license section above).&lt;/p&gt;
+
+&lt;p&gt;The following is expected from the Users:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;they must give the Users of their Derived Work all the rights they have (including the source code!).&lt;/li&gt;
+  &lt;li&gt;if they are using the Derived Work as a part of a bigger project, which is dependent on the Derived Work, the whole project must exercise this license!&lt;/li&gt;
+  &lt;li&gt;if they modify a file from your Work, they must explicitly state this in that file (along with the date of change).&lt;/li&gt;
+  &lt;li&gt;cannot hold you liable if your code breaks.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some notable software and libraries using this license:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adblock Plus&lt;/li&gt;
+  &lt;li&gt;Code::Blocks&lt;/li&gt;
+  &lt;li&gt;Gedit&lt;/li&gt;
+  &lt;li&gt;Git&lt;/li&gt;
+  &lt;li&gt;Weka&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+&lt;h5 id=&quot;note-if-you-find-any-mistake-or-legally-incorrect-statement-please-feel-free-to-contact-me-at-skrtbhtngrgmailcom&quot;&gt;NOTE: If you find any mistake or legally incorrect statement, please feel free to contact me at skrtbhtngr@gmail.com.&lt;/h5&gt;</content><author><name></name></author><summary type="html">Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="https://skrtbhtngr.github.io/jekyll/update/2018/05/13/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2018-05-13T19:34:45+05:30</published><updated>2018-05-13T19:34:45+05:30</updated><id>https://skrtbhtngr.github.io/jekyll/update/2018/05/13/welcome-to-jekyll</id><content type="html" xml:base="https://skrtbhtngr.github.io/jekyll/update/2018/05/13/welcome-to-jekyll.html">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+
+&lt;p&gt;To add new posts, simply add a file in the &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code class=&quot;highlighter-rouge&quot;&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+
+&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><summary type="html">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when a file is updated.</summary></entry></feed>
