@@ -78,7 +78,7 @@ The changes made in the past 3 months mostly involved introducing new Free wrapp
 Following are two examples showing the usage of these macros which I find worth mentioning. The code pieces on the left are the original versions, and the code pieces on the right are the versions after the macros are used.
 
 
-####An Example: `virISCSIRescanLUNs` in viriscsi.c
+#### An Example: `virISCSIRescanLUNs` in viriscsi.c
 
 {% highlight C %}
 int                                                     |   int
@@ -97,7 +97,7 @@ virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(c
 Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
 
 
-####Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
+#### Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
 
 {% highlight C %}
     virSocketAddr *broadcast = NULL;                    |     unsigned int recvbuflen;
@@ -123,7 +123,7 @@ Introducing VIR_AUTOPTR in this function simplifies the code flow. As the functi
 Using the macros for 6 variables here, the whole cleanup section as well as the varible `ret` can be dropped. All the goto jumps to `cleanup` can be replaced with return statements.
 
 
-####Yet Another Example: `virNetDevGetVirtualFunctions` in virnetdev.c
+#### Yet Another Example: `virNetDevGetVirtualFunctions` in virnetdev.c
 
 {% highlight C %}
     int ret = -1;                                       |     size_t i;
@@ -176,5 +176,5 @@ Here are a few things that are left to be done on top of my work:
 
 [ ] Change all the Free function signatures to accept a double pointer
 [ ] Change all the ListFree helper functions to take a double pointer.
-[ ] VIR\_AUTOCLOSE
-[ ] VIR\_AUTOCLEAN
+[ ] Implement VIR\_AUTOCLOSE
+[ ] Implement VIR\_AUTOCLEAN
