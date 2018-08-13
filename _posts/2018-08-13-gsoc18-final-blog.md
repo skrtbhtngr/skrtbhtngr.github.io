@@ -1,14 +1,20 @@
+---
+ title: GSoC'18 Final Blog
+---
+
 #### Project: Automatic freeing of resource
 #### Summary: ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
 #### Organization: libvirt
 #### Mentors: Erik Skultety and Pavel Hrdina
 
-**TL;DR:** [Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar) is the work I did.
+**TL;DR:** [Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar){:target="_blank"} is the work I did.
+
+--
 
 ## Introduction
-In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion:grey_exclamation:, they serve a [special purpose](https://libvirt.org/hacking.html#goto) here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
+In the libvirt core C library, goto jumps are used frequently. Despite the widely spread discouragement of usage of goto, they serve a [special purpose](https://libvirt.org/hacking.html#goto) here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
 
-The [idea](https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory), as suggested by Daniel, was to use GNU C's cleanup attribute. A more detailed description can be found in my project proposal [here]().
+The [idea](https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory), as suggested by Daniel, was to use GNU C's cleanup attribute. A more detailed description can be found in my project proposal [here](https://github.com/skrtbhtngr/skrtbhtngr.github.io/tree/master/assets/docs/libvirt_final.pdf).
 
 After a few (long) mailing list discussions <sup>[[1](https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html)]</sup><sup>[[2](https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html)]</sup> and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.
 
@@ -20,14 +26,14 @@ The macro design is primarily inspired from [GLib](https://github.com/GNOME/glib
 To implement the automatic cleanup functionality in the code, a set of four macros were introduced in `src/util/viralloc.h`.
 <br>
 
-```C
+```
 # define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type
 ```
 
 This macro is used to declare pointers to scalar types (int, char etc.) and external types (struct nlmsghdr etc.). The function `virFree` will be called automatically on those variables.
 <br>
 
-```C
+```
 # define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
 
 # define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
@@ -73,14 +79,14 @@ There were some patches which were not pushed upstream due to time constraints. 
 
 ## Results
 
-The changes made in the past 3 months mostly involved introducing new Free wrappers and modifying pointer declarations to use the macros. As a result of these changes, a great deal of LOC (lines of code), as well as goto jumps, were reduced.
+The changes made in the past 3 months mostly involved introducing new Free wrappers and modifying pointer declarations to use the macros. As a result of these changes, a great deal of LOCs (lines of code), as well as goto jumps, were reduced.
 
-Following are two examples showing the usage of these macros which I find worth mentioning. The code pieces on the left are the original versions, and the code pieces on the right are the versions after the macros are used.
+Following are three examples showing the usage of these macros which I find worth mentioning. The code pieces on the left are the original versions, and the code pieces on the right are the versions after the macros are used.
 
 
 #### An Example: `virISCSIRescanLUNs` in viriscsi.c
 
-{% highlight C %}
+```C
 int                                                     |   int
 virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(const char *session)
 {                                                       |   {
@@ -92,14 +98,14 @@ virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(c
     virCommandFree(cmd);                                |   }
     return ret;                                         |
 }                                                       |
-{% endhighlight %}
+```
 
-Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function `virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
+Introducing `VIR_AUTOPTR` in this function simplifies the code flow. As the function `virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
 
 
 #### Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
 
-{% highlight C %}
+```C
     virSocketAddr *broadcast = NULL;                    |     unsigned int recvbuflen;
     int ret = -1;                                       |     VIR_AUTOPTR(virNlMsg) nlmsg = NULL;
     struct nl_msg *nlmsg = NULL;                        |     VIR_AUTOPTR(virSocketAddr) broadcast = NULL;
@@ -118,14 +124,14 @@ Introducing VIR_AUTOPTR in this function simplifies the code flow. As the functi
      VIR_FREE(resp);                                    |
      VIR_FREE(broadcast);                               |
      return ret;                                        |     
-{% endhighlight %}
+```
 
 Using the macros for 6 variables here, the whole cleanup section as well as the varible `ret` can be dropped. All the goto jumps to `cleanup` can be replaced with return statements.
 
 
 #### Yet Another Example: `virNetDevGetVirtualFunctions` in virnetdev.c
 
-{% highlight C %}
+```C
     int ret = -1;                                       |     size_t i;
     size_t i;                                           |     VIR_AUTOFREE(char *) pf_sysfs_device_link = NULL;
     char *pf_sysfs_device_link = NULL;                  |     VIR_AUTOFREE(char *) pci_sysfs_device_link = NULL;
@@ -146,7 +152,7 @@ Using the macros for 6 variables here, the whole cleanup section as well as the 
     VIR_FREE(pci_sysfs_device_link);                    |
     VIR_FREE(pciConfigAddr);                            |
     return ret;                                         |
-{% endhighlight %}
+```
 
 Here, `vfname` and `virt_fns` are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.
 
@@ -156,7 +162,6 @@ Since the whole cleanup section can be discarded, all goto jumps can be replaced
 
 
 ## Challenges faced
-Here are some of the major issues I faced during the course of this project:
 
 * This project involved sending a lot of patches :sweat_smile:, mainly due to the fact that each logically similar change to a file should be in a separate patch. Furthermore, there had to be an order among those patches. For instance, for a file virxyz.c, there must be first a patch for defining new Free wrapper using VIR\_DEFINE\_AUTOPTR\_FUNC, then a  patch following it for using VIR\_AUTOFREE, then a patch following it for using VIR\_AUTOPTR. In many instances, the changes in those patches had to be fixed. This led to a lot of rebasing and conflict resolving which was pure pain.
 
@@ -172,9 +177,8 @@ Here are some of the major issues I faced during the course of this project:
 * If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy's value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than "success" and the dummy's value, which was to be assigned to it, will be freed automatically. See the `virNetDevGetVirtualFunctions` example in a section below.
 
 ## Work left to be done
-Here are a few things that are left to be done on top of my work:
 
 - [ ] Change all the Free function signatures to accept a double pointer
-- [ ] Change all the ListFree helper functions to take a double pointer.
-- [ ] Implement VIR\_AUTOCLOSE
-- [ ] Implement VIR\_AUTOCLEAN
+- [ ] Change all the ListFree helper functions to take a double pointer
+- [ ] Implement `VIR_AUTOCLOSE`
+- [ ] Implement `VIR_AUTOCLEAN`
