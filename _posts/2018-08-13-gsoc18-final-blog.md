@@ -2,26 +2,26 @@
  title: GSoC'18 Final Blog
 ---
 
-#### Project: Automatic freeing of resource
+#### **Project:** Automatic freeing of resource
 #### Summary: ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
 #### Organization: libvirt
 #### Mentors: Erik Skultety and Pavel Hrdina
 
 **TL;DR:** [Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar){:target="_blank"} is the work I did.
 
---
+---
 
 ## Introduction
-In the libvirt core C library, goto jumps are used frequently. Despite the widely spread discouragement of usage of goto, they serve a [special purpose](https://libvirt.org/hacking.html#goto) here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
+In the libvirt core C library, goto jumps are used frequently. Despite the widely spread discouragement of usage of goto, they serve a [special purpose](https://libvirt.org/hacking.html#goto){:target="_blank"} here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
 
-The [idea](https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory), as suggested by Daniel, was to use GNU C's cleanup attribute. A more detailed description can be found in my project proposal [here](https://github.com/skrtbhtngr/skrtbhtngr.github.io/tree/master/assets/docs/libvirt_final.pdf).
+The [idea](https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory){:target="_blank"}, as suggested by Daniel, was to use GNU C's cleanup attribute. A more detailed description can be found in my project proposal [here](https://github.com/skrtbhtngr/skrtbhtngr.github.io/tree/master/assets/docs/libvirt_final.pdf){:target="_blank"}.
 
-After a few (long) mailing list discussions <sup>[[1](https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html)]</sup><sup>[[2](https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html)]</sup> and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.
+After a few (long) mailing list discussions <sup>[[1](https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html){:target="_blank"}]</sup><sup>[[2](https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html){:target="_blank"}]</sup> and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.
 
 
 ## Macro Design
 
-The macro design is primarily inspired from [GLib](https://github.com/GNOME/glib/blob/f92359b593b9eb72cea2a67fcfe01b94520dce5a/glib/gmacros.h).
+The macro design is primarily inspired from [GLib](https://github.com/GNOME/glib/blob/f92359b593b9eb72cea2a67fcfe01b94520dce5a/glib/gmacros.h){:target="_blank"}.
 
 To implement the automatic cleanup functionality in the code, a set of four macros were introduced in `src/util/viralloc.h`.
 <br>
@@ -72,9 +72,9 @@ A new type `virString` was typedef'd for `char *` for ease of use with the clean
 
 A new syntax check rule was added in `cfg.mk` to ensure that a variable declared using the macros is initialized to NULL.
 
-[Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar) are all my patches that were accepted into the master branch.
+[Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar){:target="_blank"} are all my patches that were accepted into the master branch.
 
-There were some patches which were not pushed upstream due to time constraints. They can be found in my (forked) libvirt on Github in the branch [gsoc-2018](https://github.com/skrtbhtngr/libvirt/tree/gsoc-2018). The pending patches are [here](https://github.com/libvirt/libvirt/compare/master...skrtbhtngr:gsoc-2018).
+There were some patches which were not pushed upstream due to time constraints. They can be found in my (forked) libvirt on Github in the branch [gsoc-2018](https://github.com/skrtbhtngr/libvirt/tree/gsoc-2018){:target="_blank"}. The pending patches are [here](https://github.com/libvirt/libvirt/compare/master...skrtbhtngr:gsoc-2018){:target="_blank"}.
 
 
 ## Results
@@ -86,7 +86,7 @@ Following are three examples showing the usage of these macros which I find wort
 
 #### An Example: `virISCSIRescanLUNs` in viriscsi.c
 
-```C
+```c
 int                                                     |   int
 virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(const char *session)
 {                                                       |   {
@@ -105,7 +105,7 @@ Introducing `VIR_AUTOPTR` in this function simplifies the code flow. As the func
 
 #### Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
 
-```C
+```c
     virSocketAddr *broadcast = NULL;                    |     unsigned int recvbuflen;
     int ret = -1;                                       |     VIR_AUTOPTR(virNlMsg) nlmsg = NULL;
     struct nl_msg *nlmsg = NULL;                        |     VIR_AUTOPTR(virSocketAddr) broadcast = NULL;
@@ -131,7 +131,7 @@ Using the macros for 6 variables here, the whole cleanup section as well as the 
 
 #### Yet Another Example: `virNetDevGetVirtualFunctions` in virnetdev.c
 
-```C
+```c
     int ret = -1;                                       |     size_t i;
     size_t i;                                           |     VIR_AUTOFREE(char *) pf_sysfs_device_link = NULL;
     char *pf_sysfs_device_link = NULL;                  |     VIR_AUTOFREE(char *) pci_sysfs_device_link = NULL;
@@ -174,7 +174,8 @@ Since the whole cleanup section can be discarded, all goto jumps can be replaced
 
     For example, the function `virHashAddEntry` adds user data to a hash table upon success and returns 0. It returns -1 upon error, in which case the caller may free the user data. If the variable containing the user data is declared using the macros, it must be ensured that the variable is set to NULL if `virHashAddEntry ` succeeds, so that the user data added to the hash table is not accidentally freed.
 
-* If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy's value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than "success" and the dummy's value, which was to be assigned to it, will be freed automatically. See the `virNetDevGetVirtualFunctions` example in a section below.
+* If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy's value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than "success" and the dummy's value, which was to be assigned to it, will be freed automatically. See the `virNetDevGetVirtualFunctions` example in a section above.
+
 
 ## Work left to be done
 

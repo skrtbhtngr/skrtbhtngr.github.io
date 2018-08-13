@@ -1,22 +1,23 @@
-<h4 id="project-automatic-freeing-of-resource">Project: Automatic freeing of resource</h4>
+<h4 id="project-automatic-freeing-of-resource">
+<strong>Project:</strong> Automatic freeing of resource</h4>
 <h4 id="summary-implement-__attribute__cleanup-for-libvirt">Summary: ​Implement __attribute__((cleanup))​ for libvirt</h4>
 <h4 id="organization-libvirt">Organization: libvirt</h4>
 <h4 id="mentors-erik-skultety-and-pavel-hrdina">Mentors: Erik Skultety and Pavel Hrdina</h4>
 
 <p><strong>TL;DR:</strong> <a href="https://libvirt.org/git/?p=libvirt.git&amp;a=search&amp;h=HEAD&amp;st=author&amp;s=Sukrit+Bhatnagar" target="_blank">Here</a> is the work I did.</p>
 
-<p>–</p>
+<hr>
 
 <h2 id="introduction">Introduction</h2>
-<p>In the libvirt core C library, goto jumps are used frequently. Despite the widely spread discouragement of usage of goto, they serve a <a href="https://libvirt.org/hacking.html#goto">special purpose</a> here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!</p>
+<p>In the libvirt core C library, goto jumps are used frequently. Despite the widely spread discouragement of usage of goto, they serve a <a href="https://libvirt.org/hacking.html#goto" target="_blank">special purpose</a> here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!</p>
 
-<p>The <a href="https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory">idea</a>, as suggested by Daniel, was to use GNU C’s cleanup attribute. A more detailed description can be found in my project proposal <a href="https://github.com/skrtbhtngr/skrtbhtngr.github.io/tree/master/assets/docs/libvirt_final.pdf">here</a>.</p>
+<p>The <a href="https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory" target="_blank">idea</a>, as suggested by Daniel, was to use GNU C’s cleanup attribute. A more detailed description can be found in my project proposal <a href="https://github.com/skrtbhtngr/skrtbhtngr.github.io/tree/master/assets/docs/libvirt_final.pdf" target="_blank">here</a>.</p>
 
-<p>After a few (long) mailing list discussions <sup>[<a href="https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html">1</a>]</sup><sup>[<a href="https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html">2</a>]</sup> and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.</p>
+<p>After a few (long) mailing list discussions <sup>[<a href="https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html" target="_blank">1</a>]</sup><sup>[<a href="https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html" target="_blank">2</a>]</sup> and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.</p>
 
 <h2 id="macro-design">Macro Design</h2>
 
-<p>The macro design is primarily inspired from <a href="https://github.com/GNOME/glib/blob/f92359b593b9eb72cea2a67fcfe01b94520dce5a/glib/gmacros.h">GLib</a>.</p>
+<p>The macro design is primarily inspired from <a href="https://github.com/GNOME/glib/blob/f92359b593b9eb72cea2a67fcfe01b94520dce5a/glib/gmacros.h" target="_blank">GLib</a>.</p>
 
 <p>To implement the automatic cleanup functionality in the code, a set of four macros were introduced in <code class="highlighter-rouge">src/util/viralloc.h</code>.
 <br></p>
@@ -71,9 +72,9 @@
 
 <p>A new syntax check rule was added in <code class="highlighter-rouge">cfg.mk</code> to ensure that a variable declared using the macros is initialized to NULL.</p>
 
-<p><a href="https://libvirt.org/git/?p=libvirt.git&amp;a=search&amp;h=HEAD&amp;st=author&amp;s=Sukrit+Bhatnagar">Here</a> are all my patches that were accepted into the master branch.</p>
+<p><a href="https://libvirt.org/git/?p=libvirt.git&amp;a=search&amp;h=HEAD&amp;st=author&amp;s=Sukrit+Bhatnagar" target="_blank">Here</a> are all my patches that were accepted into the master branch.</p>
 
-<p>There were some patches which were not pushed upstream due to time constraints. They can be found in my (forked) libvirt on Github in the branch <a href="https://github.com/skrtbhtngr/libvirt/tree/gsoc-2018">gsoc-2018</a>. The pending patches are <a href="https://github.com/libvirt/libvirt/compare/master...skrtbhtngr:gsoc-2018">here</a>.</p>
+<p>There were some patches which were not pushed upstream due to time constraints. They can be found in my (forked) libvirt on Github in the branch <a href="https://github.com/skrtbhtngr/libvirt/tree/gsoc-2018" target="_blank">gsoc-2018</a>. The pending patches are <a href="https://github.com/libvirt/libvirt/compare/master...skrtbhtngr:gsoc-2018" target="_blank">here</a>.</p>
 
 <h2 id="results">Results</h2>
 
@@ -83,68 +84,68 @@
 
 <h4 id="an-example-viriscsirescanluns-in-viriscsic">An Example: <code class="highlighter-rouge">virISCSIRescanLUNs</code> in viriscsi.c</h4>
 
-<pre><code class="language-C">int                                                     |   int
-virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(const char *session)
-{                                                       |   {
-    virCommandPtr cmd = NULL;                           |       VIR_AUTOPTR(virCommand) cmd = NULL;
-    cmd = virCommandNewArgList(ISCSIADM, "--mode",      |       cmd = virCommandNewArgList(ISCSIADM, "--mode",
-                               "session", "-r",         |                                  "session", "-r",
-                               session, "-R", NULL);    |                                  session, "-R", NULL);
-    int ret = virCommandRun(cmd, NULL);                 |       return virCommandRun(cmd, NULL);
-    virCommandFree(cmd);                                |   }
-    return ret;                                         |
-}                                                       |
-</code></pre>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span>                                                     <span class="o">|</span>   <span class="kt">int</span>
+<span class="n">virISCSIRescanLUNs</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">session</span><span class="p">)</span>                 <span class="o">|</span>   <span class="n">virISCSIRescanLUNs</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">session</span><span class="p">)</span>
+<span class="p">{</span>                                                       <span class="o">|</span>   <span class="p">{</span>
+    <span class="n">virCommandPtr</span> <span class="n">cmd</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                           <span class="o">|</span>       <span class="n">VIR_AUTOPTR</span><span class="p">(</span><span class="n">virCommand</span><span class="p">)</span> <span class="n">cmd</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">virCommandNewArgList</span><span class="p">(</span><span class="n">ISCSIADM</span><span class="p">,</span> <span class="s">"--mode"</span><span class="p">,</span>      <span class="o">|</span>       <span class="n">cmd</span> <span class="o">=</span> <span class="n">virCommandNewArgList</span><span class="p">(</span><span class="n">ISCSIADM</span><span class="p">,</span> <span class="s">"--mode"</span><span class="p">,</span>
+                               <span class="s">"session"</span><span class="p">,</span> <span class="s">"-r"</span><span class="p">,</span>         <span class="o">|</span>                                  <span class="s">"session"</span><span class="p">,</span> <span class="s">"-r"</span><span class="p">,</span>
+                               <span class="n">session</span><span class="p">,</span> <span class="s">"-R"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>    <span class="o">|</span>                                  <span class="n">session</span><span class="p">,</span> <span class="s">"-R"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">virCommandRun</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>                 <span class="o">|</span>       <span class="k">return</span> <span class="n">virCommandRun</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">virCommandFree</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>                                <span class="o">|</span>   <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>                                         <span class="o">|</span>
+<span class="p">}</span>                                                       <span class="o">|</span>
+</code></pre></div></div>
 
 <p>Introducing <code class="highlighter-rouge">VIR_AUTOPTR</code> in this function simplifies the code flow. As the function <code class="highlighter-rouge">virCommandFree()</code> will be called implicitly, the variable <code class="highlighter-rouge">ret</code> can now be dropped.</p>
 
 <h4 id="another-example-virnetdevipaddradd-in-virnetdevipc">Another Example: <code class="highlighter-rouge">virNetDevIPAddrAdd</code> in virnetdevip.c</h4>
 
-<pre><code class="language-C">    virSocketAddr *broadcast = NULL;                    |     unsigned int recvbuflen;
-    int ret = -1;                                       |     VIR_AUTOPTR(virNlMsg) nlmsg = NULL;
-    struct nl_msg *nlmsg = NULL;                        |     VIR_AUTOPTR(virSocketAddr) broadcast = NULL;
-    struct nlmsghdr *resp = NULL;                       |     VIR_AUTOFREE(struct nlmsghdr *) resp = NULL;
-    unsigned int recvbuflen;                            |     VIR_AUTOFREE(char *) ipStr = NULL;
-    char *ipStr = NULL;                                 |     VIR_AUTOFREE(char *) peerStr = NULL;
-    char *peerStr = NULL;                               |     VIR_AUTOFREE(char *) bcastStr = NULL;
-    char *bcastStr = NULL;                              |
-...                                                     | ...
-    ret = 0;                                            |     return 0;
-  cleanup:                                              |
-     VIR_FREE(ipStr);                                   |
-     VIR_FREE(peerStr);                                 |
-     VIR_FREE(bcastStr);                                |
-     nlmsg_free(nlmsg);                                 |
-     VIR_FREE(resp);                                    |
-     VIR_FREE(broadcast);                               |
-     return ret;                                        |     
-</code></pre>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">virSocketAddr</span> <span class="o">*</span><span class="n">broadcast</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                    <span class="o">|</span>     <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">recvbuflen</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>                                       <span class="o">|</span>     <span class="n">VIR_AUTOPTR</span><span class="p">(</span><span class="n">virNlMsg</span><span class="p">)</span> <span class="n">nlmsg</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">nl_msg</span> <span class="o">*</span><span class="n">nlmsg</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                        <span class="o">|</span>     <span class="n">VIR_AUTOPTR</span><span class="p">(</span><span class="n">virSocketAddr</span><span class="p">)</span> <span class="n">broadcast</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">nlmsghdr</span> <span class="o">*</span><span class="n">resp</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                       <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="k">struct</span> <span class="n">nlmsghdr</span> <span class="o">*</span><span class="p">)</span> <span class="n">resp</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">recvbuflen</span><span class="p">;</span>                            <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">ipStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">ipStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                                 <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">peerStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">peerStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                               <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">bcastStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">bcastStr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                              <span class="o">|</span>
+<span class="p">...</span>                                                     <span class="o">|</span> <span class="p">...</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>                                            <span class="o">|</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">cleanup</span><span class="o">:</span>                                              <span class="o">|</span>
+     <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">ipStr</span><span class="p">);</span>                                   <span class="o">|</span>
+     <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">peerStr</span><span class="p">);</span>                                 <span class="o">|</span>
+     <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">bcastStr</span><span class="p">);</span>                                <span class="o">|</span>
+     <span class="n">nlmsg_free</span><span class="p">(</span><span class="n">nlmsg</span><span class="p">);</span>                                 <span class="o">|</span>
+     <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">resp</span><span class="p">);</span>                                    <span class="o">|</span>
+     <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">broadcast</span><span class="p">);</span>                               <span class="o">|</span>
+     <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>                                        <span class="o">|</span>     
+</code></pre></div></div>
 
 <p>Using the macros for 6 variables here, the whole cleanup section as well as the varible <code class="highlighter-rouge">ret</code> can be dropped. All the goto jumps to <code class="highlighter-rouge">cleanup</code> can be replaced with return statements.</p>
 
 <h4 id="yet-another-example-virnetdevgetvirtualfunctions-in-virnetdevc">Yet Another Example: <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> in virnetdev.c</h4>
 
-<pre><code class="language-C">    int ret = -1;                                       |     size_t i;
-    size_t i;                                           |     VIR_AUTOFREE(char *) pf_sysfs_device_link = NULL;
-    char *pf_sysfs_device_link = NULL;                  |     VIR_AUTOFREE(char *) pci_sysfs_device_link = NULL;
-    char *pci_sysfs_device_link = NULL;                 |     VIR_AUTOFREE(char *) pciConfigAddr = NULL;
-    char *pciConfigAddr = NULL;                         |     VIR_AUTOFREE(char *) pfPhysPortID = NULL;
-    char *pfPhysPortID = NULL;                          |     VIR_AUTOFREE(char **) tmpVfname = NULL;
-                                                        |     VIR_AUTOFREE(virPCIDeviceAddressPtr *) tmpVirtFns = NULL;
-...                                                     | ...
-    ret = 0;                                            |     VIR_STEAL_PTR(*vfname, tmpVfname);
-                                                        |     VIR_STEAL_PTR(*virt_fns, tmpVirtFns);
- cleanup:                                               |
-    if (ret &lt; 0) {                                      |     return 0;
-        VIR_FREE(*vfname);                              |
-        VIR_FREE(*virt_fns);                            |
-    }                                                   |
-    VIR_FREE(pfPhysPortID);                             |
-    VIR_FREE(pf_sysfs_device_link);                     |
-    VIR_FREE(pci_sysfs_device_link);                    |
-    VIR_FREE(pciConfigAddr);                            |
-    return ret;                                         |
-</code></pre>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>                                       <span class="o">|</span>     <span class="kt">size_t</span> <span class="n">i</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">i</span><span class="p">;</span>                                           <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">pf_sysfs_device_link</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">pf_sysfs_device_link</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                  <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">pci_sysfs_device_link</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">pci_sysfs_device_link</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                 <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">pciConfigAddr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">pciConfigAddr</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                         <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">pfPhysPortID</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">pfPhysPortID</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                          <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">**</span><span class="p">)</span> <span class="n">tmpVfname</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+                                                        <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="n">virPCIDeviceAddressPtr</span> <span class="o">*</span><span class="p">)</span> <span class="n">tmpVirtFns</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="p">...</span>                                                     <span class="o">|</span> <span class="p">...</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>                                            <span class="o">|</span>     <span class="n">VIR_STEAL_PTR</span><span class="p">(</span><span class="o">*</span><span class="n">vfname</span><span class="p">,</span> <span class="n">tmpVfname</span><span class="p">);</span>
+                                                        <span class="o">|</span>     <span class="n">VIR_STEAL_PTR</span><span class="p">(</span><span class="o">*</span><span class="n">virt_fns</span><span class="p">,</span> <span class="n">tmpVirtFns</span><span class="p">);</span>
+ <span class="n">cleanup</span><span class="o">:</span>                                               <span class="o">|</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>                                      <span class="o">|</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">VIR_FREE</span><span class="p">(</span><span class="o">*</span><span class="n">vfname</span><span class="p">);</span>                              <span class="o">|</span>
+        <span class="n">VIR_FREE</span><span class="p">(</span><span class="o">*</span><span class="n">virt_fns</span><span class="p">);</span>                            <span class="o">|</span>
+    <span class="p">}</span>                                                   <span class="o">|</span>
+    <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">pfPhysPortID</span><span class="p">);</span>                             <span class="o">|</span>
+    <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">pf_sysfs_device_link</span><span class="p">);</span>                     <span class="o">|</span>
+    <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">pci_sysfs_device_link</span><span class="p">);</span>                    <span class="o">|</span>
+    <span class="n">VIR_FREE</span><span class="p">(</span><span class="n">pciConfigAddr</span><span class="p">);</span>                            <span class="o">|</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>                                         <span class="o">|</span>
+</code></pre></div></div>
 
 <p>Here, <code class="highlighter-rouge">vfname</code> and <code class="highlighter-rouge">virt_fns</code> are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.</p>
 
@@ -172,7 +173,7 @@ virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(c
     <p>For example, the function <code class="highlighter-rouge">virHashAddEntry</code> adds user data to a hash table upon success and returns 0. It returns -1 upon error, in which case the caller may free the user data. If the variable containing the user data is declared using the macros, it must be ensured that the variable is set to NULL if <code class="highlighter-rouge">virHashAddEntry </code> succeeds, so that the user data added to the hash table is not accidentally freed.</p>
   </li>
   <li>
-    <p>If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy’s value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than “success” and the dummy’s value, which was to be assigned to it, will be freed automatically. See the <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> example in a section below.</p>
+    <p>If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy’s value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than “success” and the dummy’s value, which was to be assigned to it, will be freed automatically. See the <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> example in a section above.</p>
   </li>
 </ul>
 
