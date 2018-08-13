@@ -77,7 +77,7 @@
 
 <p>Following are two examples showing the usage of these macros which I find worth mentioning. The code pieces on the left are the original versions, and the code pieces on the right are the versions after the macros are used.</p>
 
-<p>####An Example: <code class="highlighter-rouge">virISCSIRescanLUNs</code> in viriscsi.c</p>
+<h4 id="an-example-viriscsirescanluns-in-viriscsic">An Example: <code class="highlighter-rouge">virISCSIRescanLUNs</code> in viriscsi.c</h4>
 
 <figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">int</span>                                                     <span class="o">|</span>   <span class="kt">int</span>
 <span class="n">virISCSIRescanLUNs</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">session</span><span class="p">)</span>                 <span class="o">|</span>   <span class="n">virISCSIRescanLUNs</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">session</span><span class="p">)</span>
@@ -93,7 +93,7 @@
 
 <p>Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()<code class="highlighter-rouge"> will be called implicitly, the variable </code>ret` can now be dropped.</p>
 
-<p>####Another Example: <code class="highlighter-rouge">virNetDevIPAddrAdd</code> in virnetdevip.c</p>
+<h4 id="another-example-virnetdevipaddradd-in-virnetdevipc">Another Example: <code class="highlighter-rouge">virNetDevIPAddrAdd</code> in virnetdevip.c</h4>
 
 <figure class="highlight"><pre><code class="language-c" data-lang="c">    <span class="n">virSocketAddr</span> <span class="o">*</span><span class="n">broadcast</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                    <span class="o">|</span>     <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">recvbuflen</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>                                       <span class="o">|</span>     <span class="n">VIR_AUTOPTR</span><span class="p">(</span><span class="n">virNlMsg</span><span class="p">)</span> <span class="n">nlmsg</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
@@ -116,7 +116,7 @@
 
 <p>Using the macros for 6 variables here, the whole cleanup section as well as the varible <code class="highlighter-rouge">ret</code> can be dropped. All the goto jumps to <code class="highlighter-rouge">cleanup</code> can be replaced with return statements.</p>
 
-<p>####Yet Another Example: <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> in virnetdev.c</p>
+<h4 id="yet-another-example-virnetdevgetvirtualfunctions-in-virnetdevc">Yet Another Example: <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> in virnetdev.c</h4>
 
 <figure class="highlight"><pre><code class="language-c" data-lang="c">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>                                       <span class="o">|</span>     <span class="kt">size_t</span> <span class="n">i</span><span class="p">;</span>
     <span class="kt">size_t</span> <span class="n">i</span><span class="p">;</span>                                           <span class="o">|</span>     <span class="n">VIR_AUTOFREE</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">pf_sysfs_device_link</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
@@ -175,5 +175,5 @@
 
 <p>[ ] Change all the Free function signatures to accept a double pointer
 [ ] Change all the ListFree helper functions to take a double pointer.
-[ ] VIR_AUTOCLOSE
-[ ] VIR_AUTOCLEAN</p>
+[ ] Implement VIR_AUTOCLOSE
+[ ] Implement VIR_AUTOCLEAN</p>

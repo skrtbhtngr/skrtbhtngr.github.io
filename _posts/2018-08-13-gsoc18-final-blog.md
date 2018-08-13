@@ -1,3 +1,7 @@
+---
+title: GSoC'18 Final Blog
+---
+
 #### Project: Automatic freeing of resource
 #### Summary: ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
 #### Organization: libvirt
