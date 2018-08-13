@@ -6,7 +6,7 @@
 <p><strong>TL;DR:</strong> <a href="https://libvirt.org/git/?p=libvirt.git&amp;a=search&amp;h=HEAD&amp;st=author&amp;s=Sukrit+Bhatnagar">Here</a> is the work I did.</p>
 
 <h2 id="introduction">Introduction</h2>
-<p>In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion <img class="emoji" title=":grey_exclamation:" alt=":grey_exclamation:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2755.png" height="20" width="20">, they serve a <a href="https://libvirt.org/hacking.html#goto">special purpose</a> here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!</p>
+<p>In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion<img class="emoji" title=":grey_exclamation:" alt=":grey_exclamation:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/2755.png" height="20" width="20">, they serve a <a href="https://libvirt.org/hacking.html#goto">special purpose</a> here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!</p>
 
 <p>The <a href="https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory">idea</a>, as suggested by Daniel, was to use GNU C’s cleanup attribute. A more detailed description can be found in my project proposal <a href="">here</a>.</p>
 
@@ -19,14 +19,15 @@
 <p>To implement the automatic cleanup functionality in the code, a set of four macros were introduced in <code class="highlighter-rouge">src/util/viralloc.h</code>.
 <br></p>
 
-<figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="cp"># define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type</span></code></pre></figure>
+<pre><code class="language-C"># define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type
+</code></pre>
 
 <p>This macro is used to declare pointers to scalar types (int, char etc.) and external types (struct nlmsghdr etc.). The function <code class="highlighter-rouge">virFree</code> will be called automatically on those variables.
 <br></p>
 
-<figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="cp"># define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
-</span>
-<span class="cp"># define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
+<pre><code class="language-C"># define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
+
+# define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
     static inline void VIR_AUTOPTR_FUNC_NAME(type)(type **_ptr) \
     { \
         if (*_ptr) \
@@ -35,7 +36,8 @@
     } \
 
 # define VIR_AUTOPTR(type) \
-    __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *</span></code></pre></figure>
+    __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *
+</code></pre>
 
 <p>These macros are meant for libvirt types such as virBitmap and virHashTable. The usage of these macros to implement the cleanup functionality is two-fold:</p>
 
@@ -91,7 +93,7 @@
     <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>                                         <span class="o">|</span>
 <span class="p">}</span>                                                       <span class="o">|</span></code></pre></figure>
 
-<p>Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()<code class="highlighter-rouge"> will be called implicitly, the variable </code>ret` can now be dropped.</p>
+<p>Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function <code class="highlighter-rouge">virCommandFree()</code> will be called implicitly, the variable <code class="highlighter-rouge">ret</code> can now be dropped.</p>
 
 <h4 id="another-example-virnetdevipaddradd-in-virnetdevipc">Another Example: <code class="highlighter-rouge">virNetDevIPAddrAdd</code> in virnetdevip.c</h4>
 
@@ -173,7 +175,13 @@
 <h2 id="work-left-to-be-done">Work left to be done</h2>
 <p>Here are a few things that are left to be done on top of my work:</p>
 
-<p>[ ] Change all the Free function signatures to accept a double pointer
-[ ] Change all the ListFree helper functions to take a double pointer.
-[ ] Implement VIR_AUTOCLOSE
-[ ] Implement VIR_AUTOCLEAN</p>
+<ul class="task-list">
+  <li class="task-list-item">
+<input type="checkbox" class="task-list-item-checkbox" disabled>Change all the Free function signatures to accept a double pointer</li>
+  <li class="task-list-item">
+<input type="checkbox" class="task-list-item-checkbox" disabled>Change all the ListFree helper functions to take a double pointer.</li>
+  <li class="task-list-item">
+<input type="checkbox" class="task-list-item-checkbox" disabled>Implement VIR_AUTOCLOSE</li>
+  <li class="task-list-item">
+<input type="checkbox" class="task-list-item-checkbox" disabled>Implement VIR_AUTOCLEAN</li>
+</ul>

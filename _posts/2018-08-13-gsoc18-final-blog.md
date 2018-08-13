@@ -1,7 +1,3 @@
----
-title: GSoC'18 Final Blog
----
-
 #### Project: Automatic freeing of resource
 #### Summary: ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
 #### Organization: libvirt
@@ -10,7 +6,7 @@ title: GSoC'18 Final Blog
 **TL;DR:** [Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar) is the work I did.
 
 ## Introduction
-In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion :grey_exclamation:, they serve a [special purpose](https://libvirt.org/hacking.html#goto) here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
+In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion:grey_exclamation:, they serve a [special purpose](https://libvirt.org/hacking.html#goto) here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task -- freeing up memory!
 
 The [idea](https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory), as suggested by Daniel, was to use GNU C's cleanup attribute. A more detailed description can be found in my project proposal [here]().
 
@@ -24,14 +20,14 @@ The macro design is primarily inspired from [GLib](https://github.com/GNOME/glib
 To implement the automatic cleanup functionality in the code, a set of four macros were introduced in `src/util/viralloc.h`.
 <br>
 
-{% highlight C %}
+```C
 # define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type
-{% endhighlight %}
+```
 
 This macro is used to declare pointers to scalar types (int, char etc.) and external types (struct nlmsghdr etc.). The function `virFree` will be called automatically on those variables.
 <br>
 
-{% highlight C %}
+```C
 # define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
 
 # define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
@@ -44,7 +40,7 @@ This macro is used to declare pointers to scalar types (int, char etc.) and exte
 
 # define VIR_AUTOPTR(type) \
     __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *
-{% endhighlight %}
+```
 
 These macros are meant for libvirt types such as virBitmap and virHashTable. The usage of these macros to implement the cleanup functionality is two-fold:
 
@@ -98,7 +94,7 @@ virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(c
 }                                                       |
 {% endhighlight %}
 
-Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
+Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function `virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
 
 
 #### Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
@@ -178,7 +174,7 @@ Here are some of the major issues I faced during the course of this project:
 ## Work left to be done
 Here are a few things that are left to be done on top of my work:
 
-[ ] Change all the Free function signatures to accept a double pointer
-[ ] Change all the ListFree helper functions to take a double pointer.
-[ ] Implement VIR\_AUTOCLOSE
-[ ] Implement VIR\_AUTOCLEAN
+- [ ] Change all the Free function signatures to accept a double pointer
+- [ ] Change all the ListFree helper functions to take a double pointer.
+- [ ] Implement VIR\_AUTOCLOSE
+- [ ] Implement VIR\_AUTOCLEAN

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.3">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-13T17:43:20+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">GSoC’18 Final Blog</title><link href="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html" rel="alternate" type="text/html" title="GSoC'18 Final Blog" /><published>2018-08-13T00:00:00+05:30</published><updated>2018-08-13T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html">&lt;h4 id=&quot;project-automatic-freeing-of-resource&quot;&gt;Project: Automatic freeing of resource&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.3">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-13T21:12:18+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">Gsoc18 Final Blog</title><link href="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html" rel="alternate" type="text/html" title="Gsoc18 Final Blog" /><published>2018-08-13T00:00:00+05:30</published><updated>2018-08-13T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html">&lt;h4 id=&quot;project-automatic-freeing-of-resource&quot;&gt;Project: Automatic freeing of resource&lt;/h4&gt;
 &lt;h4 id=&quot;summary-implement-__attribute__cleanup-for-libvirt&quot;&gt;Summary: ​Implement __attribute__((cleanup))​ for libvirt&lt;/h4&gt;
 &lt;h4 id=&quot;organization-libvirt&quot;&gt;Organization: libvirt&lt;/h4&gt;
 &lt;h4 id=&quot;mentors-erik-skultety-and-pavel-hrdina&quot;&gt;Mentors: Erik Skultety and Pavel Hrdina&lt;/h4&gt;
@@ -6,7 +6,7 @@
 &lt;p&gt;&lt;strong&gt;TL;DR:&lt;/strong&gt; &lt;a href=&quot;https://libvirt.org/git/?p=libvirt.git&amp;amp;a=search&amp;amp;h=HEAD&amp;amp;st=author&amp;amp;s=Sukrit+Bhatnagar&quot;&gt;Here&lt;/a&gt; is the work I did.&lt;/p&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
-&lt;p&gt;In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion :grey_exclamation:, they serve a &lt;a href=&quot;https://libvirt.org/hacking.html#goto&quot;&gt;special purpose&lt;/a&gt; here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!&lt;/p&gt;
+&lt;p&gt;In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion:grey_exclamation:, they serve a &lt;a href=&quot;https://libvirt.org/hacking.html#goto&quot;&gt;special purpose&lt;/a&gt; here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!&lt;/p&gt;
 
 &lt;p&gt;The &lt;a href=&quot;https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory&quot;&gt;idea&lt;/a&gt;, as suggested by Daniel, was to use GNU C’s cleanup attribute. A more detailed description can be found in my project proposal &lt;a href=&quot;&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -19,14 +19,15 @@
 &lt;p&gt;To implement the automatic cleanup functionality in the code, a set of four macros were introduced in &lt;code class=&quot;highlighter-rouge&quot;&gt;src/util/viralloc.h&lt;/code&gt;.
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;cp&quot;&gt;# define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;pre&gt;&lt;code class=&quot;language-C&quot;&gt;# define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;This macro is used to declare pointers to scalar types (int, char etc.) and external types (struct nlmsghdr etc.). The function &lt;code class=&quot;highlighter-rouge&quot;&gt;virFree&lt;/code&gt; will be called automatically on those variables.
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;cp&quot;&gt;# define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
-&lt;/span&gt;
-&lt;span class=&quot;cp&quot;&gt;# define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
+&lt;pre&gt;&lt;code class=&quot;language-C&quot;&gt;# define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
+
+# define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
     static inline void VIR_AUTOPTR_FUNC_NAME(type)(type **_ptr) \
     { \
         if (*_ptr) \
@@ -35,7 +36,8 @@
     } \
 
 # define VIR_AUTOPTR(type) \
-    __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+    __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;These macros are meant for libvirt types such as virBitmap and virHashTable. The usage of these macros to implement the cleanup functionality is two-fold:&lt;/p&gt;
 
@@ -91,7 +93,7 @@
     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;                                         &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                                                       &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()&lt;code class=&quot;highlighter-rouge&quot;&gt; will be called implicitly, the variable &lt;/code&gt;ret` can now be dropped.&lt;/p&gt;
+&lt;p&gt;Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function &lt;code class=&quot;highlighter-rouge&quot;&gt;virCommandFree()&lt;/code&gt; will be called implicitly, the variable &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt; can now be dropped.&lt;/p&gt;
 
 &lt;h4 id=&quot;another-example-virnetdevipaddradd-in-virnetdevipc&quot;&gt;Another Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevIPAddrAdd&lt;/code&gt; in virnetdevip.c&lt;/h4&gt;
 
@@ -173,10 +175,12 @@
 &lt;h2 id=&quot;work-left-to-be-done&quot;&gt;Work left to be done&lt;/h2&gt;
 &lt;p&gt;Here are a few things that are left to be done on top of my work:&lt;/p&gt;
 
-&lt;p&gt;[ ] Change all the Free function signatures to accept a double pointer
-[ ] Change all the ListFree helper functions to take a double pointer.
-[ ] Implement VIR_AUTOCLOSE
-[ ] Implement VIR_AUTOCLEAN&lt;/p&gt;</content><author><name></name></author><summary type="html">Project: Automatic freeing of resource Summary: ​Implement __attribute__((cleanup))​ for libvirt Organization: libvirt Mentors: Erik Skultety and Pavel Hrdina</summary></entry><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
+&lt;ul class=&quot;task-list&quot;&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the Free function signatures to accept a double pointer&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the ListFree helper functions to take a double pointer.&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Implement VIR_AUTOCLOSE&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Implement VIR_AUTOCLEAN&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><summary type="html">Project: Automatic freeing of resource Summary: ​Implement __attribute__((cleanup))​ for libvirt Organization: libvirt Mentors: Erik Skultety and Pavel Hrdina</summary></entry><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
 
 &lt;p&gt;In this post, I’ll try to explain the most frequently used licenses in very simple terms. These terms might NOT be 100% legally accurate as they are meant to just provide you with a gist of the various licenses. I will focus on the basic rules and leave out any complexities. For a brief comparison, visit &lt;a href=&quot;https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses#General_comparison&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
