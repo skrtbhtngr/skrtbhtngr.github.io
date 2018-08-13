@@ -1,8 +1,11 @@
 <h4 id="project-automatic-freeing-of-resource">
 <strong>Project:</strong> Automatic freeing of resource</h4>
-<h4 id="summary-implement-__attribute__cleanup-for-libvirt">Summary: ​Implement __attribute__((cleanup))​ for libvirt</h4>
-<h4 id="organization-libvirt">Organization: libvirt</h4>
-<h4 id="mentors-erik-skultety-and-pavel-hrdina">Mentors: Erik Skultety and Pavel Hrdina</h4>
+<h4 id="summary-implement-__attribute__cleanup-for-libvirt">
+<strong>Summary:</strong> ​Implement __attribute__((cleanup))​ for libvirt</h4>
+<h4 id="organization-libvirt">
+<strong>Organization:</strong> libvirt</h4>
+<h4 id="mentors-erik-skultety-and-pavel-hrdina">
+<strong>Mentors:</strong> Erik Skultety and Pavel Hrdina</h4>
 
 <p><strong>TL;DR:</strong> <a href="https://libvirt.org/git/?p=libvirt.git&amp;a=search&amp;h=HEAD&amp;st=author&amp;s=Sukrit+Bhatnagar" target="_blank">Here</a> is the work I did.</p>
 
@@ -97,7 +100,7 @@
 <span class="p">}</span>                                                       <span class="o">|</span>
 </code></pre></div></div>
 
-<p>Introducing <code class="highlighter-rouge">VIR_AUTOPTR</code> in this function simplifies the code flow. As the function <code class="highlighter-rouge">virCommandFree()</code> will be called implicitly, the variable <code class="highlighter-rouge">ret</code> can now be dropped.</p>
+<p>Introducing <code class="highlighter-rouge">VIR_AUTOPTR</code> in this function simplified the code flow. As the function <code class="highlighter-rouge">virCommandFree()</code> will be called implicitly, the variable <code class="highlighter-rouge">ret</code> was dropped.</p>
 
 <h4 id="another-example-virnetdevipaddradd-in-virnetdevipc">Another Example: <code class="highlighter-rouge">virNetDevIPAddrAdd</code> in virnetdevip.c</h4>
 
@@ -121,7 +124,7 @@
      <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>                                        <span class="o">|</span>     
 </code></pre></div></div>
 
-<p>Using the macros for 6 variables here, the whole cleanup section as well as the varible <code class="highlighter-rouge">ret</code> can be dropped. All the goto jumps to <code class="highlighter-rouge">cleanup</code> can be replaced with return statements.</p>
+<p>Using the macros for 6 variables here, the whole cleanup section, as well as the variable <code class="highlighter-rouge">ret</code>, was dropped. All the goto jumps to <code class="highlighter-rouge">cleanup</code> were replaced with return statements.</p>
 
 <h4 id="yet-another-example-virnetdevgetvirtualfunctions-in-virnetdevc">Yet Another Example: <code class="highlighter-rouge">virNetDevGetVirtualFunctions</code> in virnetdev.c</h4>
 
@@ -149,7 +152,7 @@
 
 <p>Here, <code class="highlighter-rouge">vfname</code> and <code class="highlighter-rouge">virt_fns</code> are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.</p>
 
-<p>In the end, when the function follows the “success” path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from <code class="highlighter-rouge">virFree</code>.</p>
+<p>At the end, when the function follows the “success” path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from <code class="highlighter-rouge">virFree</code>.</p>
 
 <p>Since the whole cleanup section can be discarded, all goto jumps can be replaced by return statements. In this case, when the function takes the “cleanup” path, the parameters will be untouched, and the values in those dummy variables will be freed automatically, which is what we desire.</p>
 
@@ -179,15 +182,22 @@
 
 <h2 id="work-left-to-be-done">Work left to be done</h2>
 
-<ul class="task-list">
-  <li class="task-list-item">
-<input type="checkbox" class="task-list-item-checkbox" disabled>Change all the Free function signatures to accept a double pointer</li>
-  <li class="task-list-item">
-<input type="checkbox" class="task-list-item-checkbox" disabled>Change all the ListFree helper functions to take a double pointer</li>
-  <li class="task-list-item">
-<input type="checkbox" class="task-list-item-checkbox" disabled>Implement <code class="highlighter-rouge">VIR_AUTOCLOSE</code>
-</li>
-  <li class="task-list-item">
-<input type="checkbox" class="task-list-item-checkbox" disabled>Implement <code class="highlighter-rouge">VIR_AUTOCLEAN</code>
-</li>
+<ul>
+  <li>
+    <p>Change all the Free function signatures to accept a double pointer</p>
+
+    <p>Currently, almost all the Free functions in the library take a (single) pointer to a type as their argument. This approach does not let us set the freed pointer to NULL and leave that responsibility to the caller. Basically, we need what <code class="highlighter-rouge">virCgroupFree</code> does currently.</p>
+  </li>
+  <li>
+    <p>Change all the ListFree helper functions to take a triple pointer</p>
+
+    <p>The cleanup attribute requires a function with only one argument – pointer the type to be freed, but almost all ListFree functions take another variable “count” as an argument. The aim is to make all the lists NULL-terminated so that “count” is not needed. In order to realize this, the lists should be represented by a double pointer, where each of its single pointers points to some value and the last one can be set to NULL. And finally, the ListFree functions can be modified to take a triple pointer to the type.</p>
+  </li>
+  <li>
+    <p>Implement <code class="highlighter-rouge">VIR_AUTOCLOSE</code></p>
+
+    <p>Introduce new macros to automatically close file handles. It will help in getting rid of explicit calls to macros such as <code class="highlighter-rouge">VIR_FORCE_CLOSE</code> and <code class="highlighter-rouge">VIR_DIR_CLOSE</code>.</p>
+  </li>
 </ul>
+
+<hr>

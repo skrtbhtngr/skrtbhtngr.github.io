@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.3">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-14T01:17:26+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">GSoC’18 Final Blog</title><link href="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html" rel="alternate" type="text/html" title="GSoC'18 Final Blog" /><published>2018-08-13T00:00:00+05:30</published><updated>2018-08-13T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html">&lt;h4 id=&quot;project-automatic-freeing-of-resource&quot;&gt;&lt;strong&gt;Project:&lt;/strong&gt; Automatic freeing of resource&lt;/h4&gt;
-&lt;h4 id=&quot;summary-implement-__attribute__cleanup-for-libvirt&quot;&gt;Summary: ​Implement __attribute__((cleanup))​ for libvirt&lt;/h4&gt;
-&lt;h4 id=&quot;organization-libvirt&quot;&gt;Organization: libvirt&lt;/h4&gt;
-&lt;h4 id=&quot;mentors-erik-skultety-and-pavel-hrdina&quot;&gt;Mentors: Erik Skultety and Pavel Hrdina&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.3">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-14T02:17:48+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">GSoC’18 Final Blog</title><link href="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html" rel="alternate" type="text/html" title="GSoC'18 Final Blog" /><published>2018-08-13T00:00:00+05:30</published><updated>2018-08-13T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html">&lt;h4 id=&quot;project-automatic-freeing-of-resource&quot;&gt;&lt;strong&gt;Project:&lt;/strong&gt; Automatic freeing of resource&lt;/h4&gt;
+&lt;h4 id=&quot;summary-implement-__attribute__cleanup-for-libvirt&quot;&gt;&lt;strong&gt;Summary:&lt;/strong&gt; ​Implement __attribute__((cleanup))​ for libvirt&lt;/h4&gt;
+&lt;h4 id=&quot;organization-libvirt&quot;&gt;&lt;strong&gt;Organization:&lt;/strong&gt; libvirt&lt;/h4&gt;
+&lt;h4 id=&quot;mentors-erik-skultety-and-pavel-hrdina&quot;&gt;&lt;strong&gt;Mentors:&lt;/strong&gt; Erik Skultety and Pavel Hrdina&lt;/h4&gt;
 
 &lt;p&gt;&lt;strong&gt;TL;DR:&lt;/strong&gt; &lt;a href=&quot;https://libvirt.org/git/?p=libvirt.git&amp;amp;a=search&amp;amp;h=HEAD&amp;amp;st=author&amp;amp;s=Sukrit+Bhatnagar&quot; target=&quot;_blank&quot;&gt;Here&lt;/a&gt; is the work I did.&lt;/p&gt;
 
@@ -96,7 +96,7 @@
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                                                       &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Introducing &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOPTR&lt;/code&gt; in this function simplifies the code flow. As the function &lt;code class=&quot;highlighter-rouge&quot;&gt;virCommandFree()&lt;/code&gt; will be called implicitly, the variable &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt; can now be dropped.&lt;/p&gt;
+&lt;p&gt;Introducing &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOPTR&lt;/code&gt; in this function simplified the code flow. As the function &lt;code class=&quot;highlighter-rouge&quot;&gt;virCommandFree()&lt;/code&gt; will be called implicitly, the variable &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt; was dropped.&lt;/p&gt;
 
 &lt;h4 id=&quot;another-example-virnetdevipaddradd-in-virnetdevipc&quot;&gt;Another Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevIPAddrAdd&lt;/code&gt; in virnetdevip.c&lt;/h4&gt;
 
@@ -120,7 +120,7 @@
      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;                                        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;     
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Using the macros for 6 variables here, the whole cleanup section as well as the varible &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt; can be dropped. All the goto jumps to &lt;code class=&quot;highlighter-rouge&quot;&gt;cleanup&lt;/code&gt; can be replaced with return statements.&lt;/p&gt;
+&lt;p&gt;Using the macros for 6 variables here, the whole cleanup section, as well as the variable &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt;, was dropped. All the goto jumps to &lt;code class=&quot;highlighter-rouge&quot;&gt;cleanup&lt;/code&gt; were replaced with return statements.&lt;/p&gt;
 
 &lt;h4 id=&quot;yet-another-example-virnetdevgetvirtualfunctions-in-virnetdevc&quot;&gt;Yet Another Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevGetVirtualFunctions&lt;/code&gt; in virnetdev.c&lt;/h4&gt;
 
@@ -148,7 +148,7 @@
 
 &lt;p&gt;Here, &lt;code class=&quot;highlighter-rouge&quot;&gt;vfname&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;virt_fns&lt;/code&gt; are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.&lt;/p&gt;
 
-&lt;p&gt;In the end, when the function follows the “success” path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from &lt;code class=&quot;highlighter-rouge&quot;&gt;virFree&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;At the end, when the function follows the “success” path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from &lt;code class=&quot;highlighter-rouge&quot;&gt;virFree&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;Since the whole cleanup section can be discarded, all goto jumps can be replaced by return statements. In this case, when the function takes the “cleanup” path, the parameters will be untouched, and the values in those dummy variables will be freed automatically, which is what we desire.&lt;/p&gt;
 
@@ -178,12 +178,25 @@
 
 &lt;h2 id=&quot;work-left-to-be-done&quot;&gt;Work left to be done&lt;/h2&gt;
 
-&lt;ul class=&quot;task-list&quot;&gt;
-  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the Free function signatures to accept a double pointer&lt;/li&gt;
-  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the ListFree helper functions to take a double pointer&lt;/li&gt;
-  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Implement &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOCLOSE&lt;/code&gt;&lt;/li&gt;
-  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Implement &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOCLEAN&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><summary type="html">Project: Automatic freeing of resource Summary: ​Implement __attribute__((cleanup))​ for libvirt Organization: libvirt Mentors: Erik Skultety and Pavel Hrdina</summary></entry><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Change all the Free function signatures to accept a double pointer&lt;/p&gt;
+
+    &lt;p&gt;Currently, almost all the Free functions in the library take a (single) pointer to a type as their argument. This approach does not let us set the freed pointer to NULL and leave that responsibility to the caller. Basically, we need what &lt;code class=&quot;highlighter-rouge&quot;&gt;virCgroupFree&lt;/code&gt; does currently.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Change all the ListFree helper functions to take a triple pointer&lt;/p&gt;
+
+    &lt;p&gt;The cleanup attribute requires a function with only one argument – pointer the type to be freed, but almost all ListFree functions take another variable “count” as an argument. The aim is to make all the lists NULL-terminated so that “count” is not needed. In order to realize this, the lists should be represented by a double pointer, where each of its single pointers points to some value and the last one can be set to NULL. And finally, the ListFree functions can be modified to take a triple pointer to the type.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Implement &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOCLOSE&lt;/code&gt;&lt;/p&gt;
+
+    &lt;p&gt;Introduce new macros to automatically close file handles. It will help in getting rid of explicit calls to macros such as &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_FORCE_CLOSE&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_DIR_CLOSE&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;</content><author><name></name></author><summary type="html">Project: Automatic freeing of resource Summary: ​Implement __attribute__((cleanup))​ for libvirt Organization: libvirt Mentors: Erik Skultety and Pavel Hrdina</summary></entry><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
 
 &lt;p&gt;In this post, I’ll try to explain the most frequently used licenses in very simple terms. These terms might NOT be 100% legally accurate as they are meant to just provide you with a gist of the various licenses. I will focus on the basic rules and leave out any complexities. For a brief comparison, visit &lt;a href=&quot;https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses#General_comparison&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 

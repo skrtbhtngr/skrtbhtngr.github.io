@@ -3,9 +3,9 @@
 ---
 
 #### **Project:** Automatic freeing of resource
-#### Summary: ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
-#### Organization: libvirt
-#### Mentors: Erik Skultety and Pavel Hrdina
+#### **Summary:** ​Implement \_\_attribute\_\_((cleanup))​ for libvirt
+#### **Organization:** libvirt
+#### **Mentors:** Erik Skultety and Pavel Hrdina
 
 **TL;DR:** [Here](https://libvirt.org/git/?p=libvirt.git&a=search&h=HEAD&st=author&s=Sukrit+Bhatnagar){:target="_blank"} is the work I did.
 
@@ -55,8 +55,6 @@ These macros are meant for libvirt types such as virBitmap and virHashTable. The
     Pass a libvirt datatype `type` and a pre-defined Free function `func` to it. This macro is usually invoked in the corresponding `.h` file of a module for an externally visible function `func`, or in the corresponding `.c` file for a static function `func`.
 2. Declare pointers to libvirt datatype `type` which have to be auto-freed upon function return using the VIR_AUTOPTR macro.
 
-
-
 ## Work Done
 
 More than 100 module files were modified in the util directory to implement the cleanup functionality. The changes made to a file followed an order, each of which had its own patch.
@@ -100,7 +98,7 @@ virISCSIRescanLUNs(const char *session)                 |   virISCSIRescanLUNs(c
 }                                                       |
 ```
 
-Introducing `VIR_AUTOPTR` in this function simplifies the code flow. As the function `virCommandFree()` will be called implicitly, the variable `ret` can now be dropped.
+Introducing `VIR_AUTOPTR` in this function simplified the code flow. As the function `virCommandFree()` will be called implicitly, the variable `ret` was dropped.
 
 
 #### Another Example: `virNetDevIPAddrAdd` in virnetdevip.c
@@ -126,7 +124,7 @@ Introducing `VIR_AUTOPTR` in this function simplifies the code flow. As the func
      return ret;                                        |     
 ```
 
-Using the macros for 6 variables here, the whole cleanup section as well as the varible `ret` can be dropped. All the goto jumps to `cleanup` can be replaced with return statements.
+Using the macros for 6 variables here, the whole cleanup section, as well as the variable `ret`, was dropped. All the goto jumps to `cleanup` were replaced with return statements.
 
 
 #### Yet Another Example: `virNetDevGetVirtualFunctions` in virnetdev.c
@@ -156,7 +154,7 @@ Using the macros for 6 variables here, the whole cleanup section as well as the 
 
 Here, `vfname` and `virt_fns` are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.
 
-In the end, when the function follows the "success" path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from `virFree`.
+At the end, when the function follows the "success" path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from `virFree`.
 
 Since the whole cleanup section can be discarded, all goto jumps can be replaced by return statements. In this case, when the function takes the "cleanup" path, the parameters will be untouched, and the values in those dummy variables will be freed automatically, which is what we desire.
 
@@ -167,7 +165,6 @@ Since the whole cleanup section can be discarded, all goto jumps can be replaced
 
 * In implementing the cleanup attribute, almost all of the source files in the library have to be touched. To make such broad changes, we had a few community discussions regarding the design of the macros. These discussions, while essential, consumed a few weeks of my coding period.
 
-
 ## Some tips for using the macros
 
 * If a variable has to retain a value on success, but freed on other paths, assign NULL to it before returning from the function on the success path. This will ensure that the value to be returned is not auto-freed after the function returns.
@@ -176,10 +173,18 @@ Since the whole cleanup section can be discarded, all goto jumps can be replaced
 
 * If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy's value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than "success" and the dummy's value, which was to be assigned to it, will be freed automatically. See the `virNetDevGetVirtualFunctions` example in a section above.
 
-
 ## Work left to be done
 
-- [ ] Change all the Free function signatures to accept a double pointer
-- [ ] Change all the ListFree helper functions to take a double pointer
-- [ ] Implement `VIR_AUTOCLOSE`
-- [ ] Implement `VIR_AUTOCLEAN`
+- Change all the Free function signatures to accept a double pointer
+
+	Currently, almost all the Free functions in the library take a (single) pointer to a type as their argument. This approach does not let us set the freed pointer to NULL and leave that responsibility to the caller. Basically, we need what `virCgroupFree` does currently.
+	
+- Change all the ListFree helper functions to take a triple pointer
+
+	The cleanup attribute requires a function with only one argument -- pointer the type to be freed, but almost all ListFree functions take another variable "count" as an argument. The aim is to make all the lists NULL-terminated so that "count" is not needed. In order to realize this, the lists should be represented by a double pointer, where each of its single pointers points to some value and the last one can be set to NULL. And finally, the ListFree functions can be modified to take a triple pointer to the type.
+
+- Implement `VIR_AUTOCLOSE`
+
+	Introduce new macros to automatically close file handles. It will help in getting rid of explicit calls to macros such as `VIR_FORCE_CLOSE` and `VIR_DIR_CLOSE`.
+
+---
