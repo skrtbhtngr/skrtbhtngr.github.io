@@ -1,4 +1,187 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.1">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-11T22:21:33+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.1">Jekyll</generator><link href="https://skrtbhtngr.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://skrtbhtngr.github.io/" rel="alternate" type="text/html" /><updated>2018-08-13T15:54:31+05:30</updated><id>https://skrtbhtngr.github.io/</id><title type="html">Sukrit Bhatnagar</title><subtitle>Blog about all things technical that I like.</subtitle><entry><title type="html">Gsoc18 Final Blog</title><link href="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html" rel="alternate" type="text/html" title="Gsoc18 Final Blog" /><published>2018-08-13T00:00:00+05:30</published><updated>2018-08-13T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/08/13/gsoc18-final-blog.html">&lt;p&gt;#GSoC 2018 Final Blog&lt;/p&gt;
+
+&lt;p&gt;####Project: Automatic freeing of resource
+####Summary: ​Implement __attribute__((cleanup))​ for libvirt
+####Organization: libvirt
+####Mentors: Erik Skultety and Pavel Hrdina&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TL;DR:&lt;/strong&gt; &lt;a href=&quot;https://libvirt.org/git/?p=libvirt.git&amp;amp;a=search&amp;amp;h=HEAD&amp;amp;st=author&amp;amp;s=Sukrit+Bhatnagar&quot;&gt;Here&lt;/a&gt; is the work I did.&lt;/p&gt;
+
+&lt;p&gt;##Introduction
+In the libvirt core C library, goto jumps are used frequently. Contrary to the popular negative notion :grey_exclamation:, they serve a &lt;a href=&quot;https://libvirt.org/hacking.html#goto&quot;&gt;special purpose&lt;/a&gt; here. They are employed to perform cleanup tasks like freeing memory allocated to pointers, closing file handles, unlocking mutexes, unref-ing objects etc. before a function returns. But, in most cases, it led to functions with too many jumps, all for just one task – freeing up memory!&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://wiki.libvirt.org/page/Google_Summer_of_Code_Ideas#Automatic_freeing_of_memory&quot;&gt;idea&lt;/a&gt;, as suggested by Daniel, was to use GNU C’s cleanup attribute. A more detailed description can be found in my project proposal &lt;a href=&quot;&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;After a few (long) mailing list discussions &lt;sup&gt;[&lt;a href=&quot;https://www.redhat.com/archives/libvir-list/2018-March/msg01532.html&quot;&gt;1&lt;/a&gt;]&lt;/sup&gt;&lt;sup&gt;[&lt;a href=&quot;https://www.redhat.com/archives/libvir-list/2018-June/msg00807.html&quot;&gt;2&lt;/a&gt;]&lt;/sup&gt; and weekly meetings with Erik and Pavel, we all agreed upon the use of macros and their design.&lt;/p&gt;
+
+&lt;p&gt;##Macro Design&lt;/p&gt;
+
+&lt;p&gt;The macro design is primarily inspired from &lt;a href=&quot;https://github.com/GNOME/glib/blob/f92359b593b9eb72cea2a67fcfe01b94520dce5a/glib/gmacros.h&quot;&gt;GLib&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;To implement the automatic cleanup functionality in the code, a set of four macros were introduced in &lt;code class=&quot;highlighter-rouge&quot;&gt;src/util/viralloc.h&lt;/code&gt;.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# define VIR_AUTOFREE(type) __attribute__((cleanup(virFree))) type
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This macro is used to declare pointers to scalar types (int, char etc.) and external types (struct nlmsghdr etc.). The function &lt;code class=&quot;highlighter-rouge&quot;&gt;virFree&lt;/code&gt; will be called automatically on those variables.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# define VIR_AUTOPTR_FUNC_NAME(type) type##AutoPtrFree
+
+# define VIR_DEFINE_AUTOPTR_FUNC(type, func) \
+    static inline void VIR_AUTOPTR_FUNC_NAME(type)(type **_ptr) \
+    { \
+        if (*_ptr) \
+            (func)(*_ptr); \
+        *_ptr = NULL; \
+    } \
+
+# define VIR_AUTOPTR(type) \
+    __attribute__((cleanup(VIR_AUTOPTR_FUNC_NAME(type)))) type *
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;These macros are meant for libvirt types such as virBitmap and virHashTable. The usage of these macros to implement the cleanup functionality is two-fold:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Define a new Free wrapper using &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_DEFINE_AUTOPTR_FUNC&lt;/code&gt;.&lt;/p&gt;
+
+    &lt;p&gt;Pass a libvirt datatype &lt;code class=&quot;highlighter-rouge&quot;&gt;type&lt;/code&gt; and a pre-defined Free function &lt;code class=&quot;highlighter-rouge&quot;&gt;func&lt;/code&gt; to it. This macro is usually invoked in the corresponding &lt;code class=&quot;highlighter-rouge&quot;&gt;.h&lt;/code&gt; file of a module for an externally visible function &lt;code class=&quot;highlighter-rouge&quot;&gt;func&lt;/code&gt;, or in the corresponding &lt;code class=&quot;highlighter-rouge&quot;&gt;.c&lt;/code&gt; file for a static function &lt;code class=&quot;highlighter-rouge&quot;&gt;func&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Declare pointers to libvirt datatype &lt;code class=&quot;highlighter-rouge&quot;&gt;type&lt;/code&gt; which have to be auto-freed upon function return using the VIR_AUTOPTR macro.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;##Challenges faced
+Here are some of the major issues I faced during the course of this project:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;This project involved sending a lot of patches :sweat_smile:, mainly due to the fact that each logically similar change to a file should be in a separate patch. Furthermore, there had to be an order among those patches. For instance, for a file virxyz.c, there must be first a patch for defining new Free wrapper using VIR_DEFINE_AUTOPTR_FUNC, then a  patch following it for using VIR_AUTOFREE, then a patch following it for using VIR_AUTOPTR. In many instances, the changes in those patches had to be fixed. This led to a lot of rebasing and conflict resolving which was pure pain.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;In implementing the cleanup attribute, almost all of the source files in the library have to be touched. To make such broad changes, we had a few community discussions regarding the design of the macros. These discussions, while essential, consumed a few weeks of my coding period.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;##Some tips for using the macros&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;If a variable has to retain a value on success, but freed on other paths, assign NULL to it before returning from the function on the success path. This will ensure that the value to be returned is not auto-freed after the function returns.&lt;/p&gt;
+
+    &lt;p&gt;For example, the function &lt;code class=&quot;highlighter-rouge&quot;&gt;virHashAddEntry&lt;/code&gt; adds user data to a hash table upon success and returns 0. It returns -1 upon error, in which case the caller may free the user data. If the variable containing the user data is declared using the macros, it must be ensured that the variable is set to NULL if &lt;code class=&quot;highlighter-rouge&quot;&gt;virHashAddEntry &lt;/code&gt; succeeds, so that the user data added to the hash table is not accidentally freed.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;If a function parameter has to be freed on other paths, but not on the success path, use a dummy local variable in its place all over the function and steal dummy’s value into the parameter before the function returns on the success path. This will ensure that the parameter is not assigned any value upon paths other than “success” and the dummy’s value, which was to be assigned to it, will be freed automatically. See the &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevGetVirtualFunctions&lt;/code&gt; example in a section below.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;##Work Done&lt;/p&gt;
+
+&lt;p&gt;More than 100 module files were modified in the util directory to implement the cleanup functionality. The changes made to a file followed an order, each of which had its own patch.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;define a Free function for a libvirt type (if not already done)&lt;/li&gt;
+  &lt;li&gt;define a Free wrapper using &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_DEFINE_AUTOPTR_FUNC&lt;/code&gt; in header/source file&lt;/li&gt;
+  &lt;li&gt;use &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOFREE&lt;/code&gt; in the source file&lt;/li&gt;
+  &lt;li&gt;use &lt;code class=&quot;highlighter-rouge&quot;&gt;VIR_AUTOPTR&lt;/code&gt; in the source file&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;There were many files where a subset of these steps was not needed.&lt;/p&gt;
+
+&lt;p&gt;A new type &lt;code class=&quot;highlighter-rouge&quot;&gt;virString&lt;/code&gt; was typedef’d for &lt;code class=&quot;highlighter-rouge&quot;&gt;char *&lt;/code&gt; for ease of use with the cleanup macros.&lt;/p&gt;
+
+&lt;p&gt;A new syntax check rule was added in &lt;code class=&quot;highlighter-rouge&quot;&gt;cfg.mk&lt;/code&gt; to ensure that a variable declared using the macros is initialized to NULL.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://libvirt.org/git/?p=libvirt.git&amp;amp;a=search&amp;amp;h=HEAD&amp;amp;st=author&amp;amp;s=Sukrit+Bhatnagar&quot;&gt;Here&lt;/a&gt; are all my patches that were accepted into the master branch.&lt;/p&gt;
+
+&lt;p&gt;There were some patches which were not pushed upstream due to time constraints. They can be found in my (forked) libvirt on Github in the branch &lt;a href=&quot;https://github.com/skrtbhtngr/libvirt/tree/gsoc-2018&quot;&gt;gsoc-2018&lt;/a&gt;. The pending patches are &lt;a href=&quot;https://github.com/libvirt/libvirt/compare/master...skrtbhtngr:gsoc-2018&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;##Results&lt;/p&gt;
+
+&lt;p&gt;The changes made in the past 3 months mostly involved introducing new Free wrappers and modifying pointer declarations to use the macros. As a result of these changes, a great deal of LOC (lines of code), as well as goto jumps, were reduced.&lt;/p&gt;
+
+&lt;p&gt;Following are two examples showing the usage of these macros which I find worth mentioning. The code pieces on the left are the original versions, and the code pieces on the right are the versions after the macros are used.&lt;/p&gt;
+
+&lt;p&gt;####An Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virISCSIRescanLUNs&lt;/code&gt; in viriscsi.c&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c&quot; data-lang=&quot;c&quot;&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;                                                     &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;virISCSIRescanLUNs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;                 &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;virISCSIRescanLUNs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;                                                       &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;virCommandPtr&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;                           &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;VIR_AUTOPTR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;virCommand&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;virCommandNewArgList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ISCSIADM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;--mode&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;virCommandNewArgList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ISCSIADM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;--mode&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                               &lt;span class=&quot;s&quot;&gt;&quot;session&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-r&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;                                  &lt;span class=&quot;s&quot;&gt;&quot;session&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-r&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                               &lt;span class=&quot;n&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-R&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;                                  &lt;span class=&quot;n&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-R&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;virCommandRun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;                 &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;virCommandRun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;virCommandFree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;                                &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;                                         &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                                                       &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Introducing VIR_AUTOPTR in this function simplifies the code flow. As the function ` virCommandFree()&lt;code class=&quot;highlighter-rouge&quot;&gt; will be called implicitly, the variable &lt;/code&gt;ret` can now be dropped.&lt;/p&gt;
+
+&lt;p&gt;####Another Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevIPAddrAdd&lt;/code&gt; in virnetdevip.c&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    virSocketAddr *broadcast = NULL;                    |     unsigned int recvbuflen;
+    int ret = -1;                                       |     VIR_AUTOPTR(virNlMsg) nlmsg = NULL;
+    struct nl_msg *nlmsg = NULL;                        |     VIR_AUTOPTR(virSocketAddr) broadcast = NULL;
+    struct nlmsghdr *resp = NULL;                       |     VIR_AUTOFREE(struct nlmsghdr *) resp = NULL;
+    unsigned int recvbuflen;                            |     VIR_AUTOFREE(char *) ipStr = NULL;
+    char *ipStr = NULL;                                 |     VIR_AUTOFREE(char *) peerStr = NULL;
+    char *peerStr = NULL;                               |     VIR_AUTOFREE(char *) bcastStr = NULL;
+    char *bcastStr = NULL;                              |
+...                                                     | ...
+    ret = 0;                                            |     return 0;
+  cleanup:                                              |
+     VIR_FREE(ipStr);                                   |
+     VIR_FREE(peerStr);                                 |
+     VIR_FREE(bcastStr);                                |
+     nlmsg_free(nlmsg);                                 |
+     VIR_FREE(resp);                                    |
+     VIR_FREE(broadcast);                               |
+     return ret;                                        |     
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Using the macros for 6 variables here, the whole cleanup section as well as the varible &lt;code class=&quot;highlighter-rouge&quot;&gt;ret&lt;/code&gt; can be dropped. All the goto jumps to &lt;code class=&quot;highlighter-rouge&quot;&gt;cleanup&lt;/code&gt; can be replaced with return statements.&lt;/p&gt;
+
+&lt;p&gt;####Yet Another Example: &lt;code class=&quot;highlighter-rouge&quot;&gt;virNetDevGetVirtualFunctions&lt;/code&gt; in virnetdev.c&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    int ret = -1;                                       |     size_t i;
+    size_t i;                                           |     VIR_AUTOFREE(char *) pf_sysfs_device_link = NULL;
+    char *pf_sysfs_device_link = NULL;                  |     VIR_AUTOFREE(char *) pci_sysfs_device_link = NULL;
+    char *pci_sysfs_device_link = NULL;                 |     VIR_AUTOFREE(char *) pciConfigAddr = NULL;
+    char *pciConfigAddr = NULL;                         |     VIR_AUTOFREE(char *) pfPhysPortID = NULL;
+    char *pfPhysPortID = NULL;                          |     VIR_AUTOFREE(char **) tmpVfname = NULL;
+                                                        |     VIR_AUTOFREE(virPCIDeviceAddressPtr *) tmpVirtFns = NULL;
+...                                                     | ...
+    ret = 0;                                            |     VIR_STEAL_PTR(*vfname, tmpVfname);
+                                                        |     VIR_STEAL_PTR(*virt_fns, tmpVirtFns);
+ cleanup:                                               |
+    if (ret &amp;lt; 0) {                                      |     return 0;
+        VIR_FREE(*vfname);                              |
+        VIR_FREE(*virt_fns);                            |
+    }                                                   |
+    VIR_FREE(pfPhysPortID);                             |
+    VIR_FREE(pf_sysfs_device_link);                     |
+    VIR_FREE(pci_sysfs_device_link);                    |
+    VIR_FREE(pciConfigAddr);                            |
+    return ret;                                         |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here, &lt;code class=&quot;highlighter-rouge&quot;&gt;vfname&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;virt_fns&lt;/code&gt; are parameters passed to this function. In the case of functions like this one, where the parameters have to be freed in the cleanup section, a different approach is used. Dummy variables are added, one for each such parameter, they replace all occurrences of the said parameters in the function code.&lt;/p&gt;
+
+&lt;p&gt;In the end, when the function follows the “success” path, the values in those dummy variables will be moved to their corresponding parameters. Those dummy variables will then be NULL and thus their values (now in the parameters) are safe from &lt;code class=&quot;highlighter-rouge&quot;&gt;virFree&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since the whole cleanup section can be discarded, all goto jumps can be replaced by return statements. In this case, when the function takes the “cleanup” path, the parameters will be untouched, and the values in those dummy variables will be freed automatically, which is what we desire.&lt;/p&gt;
+
+&lt;p&gt;##Work left to be done
+Here are a few things that are left to be done on top of my work:&lt;/p&gt;
+
+&lt;ul class=&quot;task-list&quot;&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the Free function signatures to accept a double pointer&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;Change all the ListFree helper functions to take a double pointer.&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;VIR_AUTOCLOSE&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; /&gt;VIR_AUTOCLEAN&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><summary type="html">#GSoC 2018 Final Blog</summary></entry><entry><title type="html">Open Source Licenses</title><link href="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html" rel="alternate" type="text/html" title="Open Source Licenses" /><published>2018-05-17T00:00:00+05:30</published><updated>2018-05-17T00:00:00+05:30</updated><id>https://skrtbhtngr.github.io/2018/05/17/open-source-licenses</id><content type="html" xml:base="https://skrtbhtngr.github.io/2018/05/17/open-source-licenses.html">&lt;p&gt;Many users who are beginning a new open-source project, or are making their existing projects open-source face the difficulty in choosing a license for their project. The legal jargons inside those licenses might go over your head.&lt;/p&gt;
 
 &lt;p&gt;In this post, I’ll try to explain the most frequently used licenses in very simple terms. These terms might NOT be 100% legally accurate as they are meant to just provide you with a gist of the various licenses. I will focus on the basic rules and leave out any complexities. For a brief comparison, visit &lt;a href=&quot;https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses#General_comparison&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
