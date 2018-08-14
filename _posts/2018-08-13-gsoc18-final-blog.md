@@ -181,7 +181,7 @@ Since the whole cleanup section can be discarded, all goto jumps can be replaced
 	
 - Change all the ListFree helper functions to take a triple pointer
 
-	The cleanup attribute requires a function with only one argument -- pointer the type to be freed, but almost all ListFree functions take another variable "count" as an argument. The aim is to make all the lists NULL-terminated so that "count" is not needed. In order to realize this, the lists should be represented by a double pointer, where each of its single pointers points to some value and the last one can be set to NULL. And finally, the ListFree functions can be modified to take a triple pointer to the type.
+	The cleanup attribute requires a function with only one argument -- pointer the type to be freed, but almost all ListFree functions take another variable "count" as an argument. The aim is to make all the lists NULL-terminated so that "count" is not needed. In order to accomplish this, the lists should be represented by a double pointer, where each of its single pointers points to some value and the last one can be set to NULL. And finally, the ListFree functions can be modified to take a triple pointer to the type.
 
 - Implement `VIR_AUTOCLOSE`
 
